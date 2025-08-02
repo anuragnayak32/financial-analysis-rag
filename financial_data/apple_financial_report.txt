@@ -1,0 +1,31 @@
+Company: AAPL (Apple Inc.)
+Date: August 1, 2025
+
+Financial Overview:
+Apple Inc. reported strong financial results for Q2 2025. Revenue reached $98.5 billion, up 12% year-over-year. iPhone sales continued to dominate, accounting for 54% of total revenue.
+
+Key Metrics:
+- Revenue: $98.5B
+- Operating Income: $32.1B
+- Net Income: $26.8B
+- EPS: $4.85
+- Gross Margin: 43.2%
+
+Segment Performance:
+1. iPhone: $52.5B (+15% YoY)
+2. Services: $21.2B (+18% YoY)
+3. Mac: $9.8B (-5% YoY)
+4. iPad: $7.2B (+2% YoY)
+5. Wearables: $7.8B (+8% YoY)
+
+Market Position:
+- Global market share in smartphones: 23%
+- Services revenue growing consistently
+- Strong presence in premium segment
+- Expanding presence in emerging markets
+
+Risk Factors:
+- Supply chain constraints
+- Increasing competition in services
+- Regulatory challenges
+- Market saturation in key segments

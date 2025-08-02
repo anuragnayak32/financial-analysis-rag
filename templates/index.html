@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analysis RAG System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .response-area {
+            min-height: 100px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Financial Analysis RAG System</h1>
+        
+        <!-- Question History Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Question History</h5>
+                <button class="btn btn-sm btn-outline-primary" id="refreshHistory">Refresh</button>
+            </div>
+            <div class="card-body">
+                <div id="historyList" class="list-group">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Financial Questions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Ask Financial Questions</h5>
+            </div>
+            <div class="card-body">
+                <form id="queryForm">
+                    <div class="mb-3">
+                        <label for="query" class="form-label">Enter your question:</label>
+                        <input type="text" class="form-control" id="query" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Analyze</button>
+                </form>
+                <div id="queryLoader" class="loader"></div>
+                <div id="queryResponse" class="response-area mt-3"></div>
+                
+                <!-- Previous Questions Section -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Previously Asked Financial Questions</h6>
+                    <div id="previousQuestions" class="list-group">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Trends Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Analyze Market Trends</h5>
+            </div>
+            <div class="card-body">
+                <form id="marketForm">
+                    <div class="mb-3">
+                        <label for="symbol" class="form-label">Stock Symbol:</label>
+                        <input type="text" class="form-control" id="symbol" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="timeframe" class="form-label">Timeframe:</label>
+                        <select class="form-control" id="timeframe" required>
+                            <option value="1d">1 Day</option>
+                            <option value="1w">1 Week</option>
+                            <option value="1m">1 Month</option>
+                            <option value="3m">3 Months</option>
+                            <option value="6m">6 Months</option>
+                            <option value="1y">1 Year</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Analyze Trends</button>
+                </form>
+                <div id="marketLoader" class="loader"></div>
+                <div id="marketResponse" class="response-area mt-3"></div>
+                <div id="priceChart" class="mt-4" style="height: 400px;"></div>
+                <div id="volumeChart" class="mt-4" style="height: 200px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        function loadFinancialQuestions() {
+            $.ajax({
+                url: '/financial_questions',
+                method: 'GET',
+                success: function(response) {
+                    const questions = response.financial_questions;
+                    const questionsHtml = questions.map(q => `
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${new Date(q.timestamp).toLocaleString()}</small>
+                            </div>
+                            <p class="mb-1"><strong>Q:</strong> ${q.query}</p>
+                            <p class="mb-0"><strong>A:</strong> ${q.response}</p>
+                        </div>
+                    `).join('');
+                    $('#previousQuestions').html(questionsHtml || '<p class="text-center text-muted">No questions asked yet</p>');
+                },
+                error: function() {
+                    $('#previousQuestions').html('<p class="text-center text-danger">Error loading questions</p>');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            // Load financial questions on page load
+            loadFinancialQuestions();
+
+            // Handle financial questions
+            $('#queryForm').on('submit', function(e) {
+                e.preventDefault();
+                $('#queryLoader').show();
+                $('#queryResponse').html('');
+                
+                $.ajax({
+                    url: '/analyze',
+                    method: 'POST',
+                    data: {
+                        query: $('#query').val()
+                    },
+                    success: function(response) {
+                        $('#queryResponse').html(response.response.replace(/\n/g, '<br>'));
+                        // Refresh the financial questions list after a new question
+                        loadFinancialQuestions();
+                    },
+                    error: function() {
+                        $('#queryResponse').html('Error processing request');
+                    },
+                    complete: function() {
+                        $('#queryLoader').hide();
+                    }
+                });
+            });
+
+            // Handle market trends
+            $('#marketForm').on('submit', function(e) {
+                e.preventDefault();
+                $('#marketLoader').show();
+                $('#marketResponse').html('');
+                $('#priceChart').html('');
+                $('#volumeChart').html('');
+                
+                $.ajax({
+                    url: '/market_trends',
+                    method: 'POST',
+                    data: {
+                        symbol: $('#symbol').val(),
+                        timeframe: $('#timeframe').val()
+                    },
+                    success: function(response) {
+                        $('#marketResponse').html(response.response.replace(/\n/g, '<br>'));
+                        
+                        if (response.graphData) {
+                            // Create price chart
+                            var priceTrace = {
+                                x: response.graphData.dates,
+                                y: response.graphData.prices,
+                                type: 'scatter',
+                                name: 'Stock Price',
+                                line: {color: '#17a2b8'}
+                            };
+                            
+                            var priceLayout = {
+                                title: 'Stock Price History',
+                                xaxis: {title: 'Date'},
+                                yaxis: {title: 'Price ($)'},
+                                hovermode: 'closest'
+                            };
+                            
+                            Plotly.newPlot('priceChart', [priceTrace], priceLayout);
+                            
+                            // Create volume chart
+                            var volumeTrace = {
+                                x: response.graphData.dates,
+                                y: response.graphData.volume,
+                                type: 'bar',
+                                name: 'Volume',
+                                marker: {color: '#6c757d'}
+                            };
+                            
+                            var volumeLayout = {
+                                title: 'Trading Volume',
+                                xaxis: {title: 'Date'},
+                                yaxis: {title: 'Volume'},
+                                hovermode: 'closest'
+                            };
+                            
+                            Plotly.newPlot('volumeChart', [volumeTrace], volumeLayout);
+                        }
+                    },
+                    error: function() {
+                        $('#marketResponse').html('Error processing request');
+                    },
+                    complete: function() {
+                        $('#marketLoader').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
