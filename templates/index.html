@@ -45,18 +45,6 @@
     <div class="container">
         <h1 class="text-center mb-4">Financial Analysis RAG System</h1>
         
-        <!-- Question History Card -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Question History</h5>
-                <button class="btn btn-sm btn-outline-primary" id="refreshHistory">Refresh</button>
-            </div>
-            <div class="card-body">
-                <div id="historyList" class="list-group">
-                </div>
-            </div>
-        </div>
-        
         <!-- Financial Questions Card -->
         <div class="card">
             <div class="card-header">
@@ -72,13 +60,6 @@
                 </form>
                 <div id="queryLoader" class="loader"></div>
                 <div id="queryResponse" class="response-area mt-3"></div>
-                
-                <!-- Previous Questions Section -->
-                <div class="mt-4">
-                    <h6 class="mb-3">Previously Asked Financial Questions</h6>
-                    <div id="previousQuestions" class="list-group">
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -117,33 +98,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-        function loadFinancialQuestions() {
-            $.ajax({
-                url: '/financial_questions',
-                method: 'GET',
-                success: function(response) {
-                    const questions = response.financial_questions;
-                    const questionsHtml = questions.map(q => `
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">${new Date(q.timestamp).toLocaleString()}</small>
-                            </div>
-                            <p class="mb-1"><strong>Q:</strong> ${q.query}</p>
-                            <p class="mb-0"><strong>A:</strong> ${q.response}</p>
-                        </div>
-                    `).join('');
-                    $('#previousQuestions').html(questionsHtml || '<p class="text-center text-muted">No questions asked yet</p>');
-                },
-                error: function() {
-                    $('#previousQuestions').html('<p class="text-center text-danger">Error loading questions</p>');
-                }
-            });
-        }
-
         $(document).ready(function() {
-            // Load financial questions on page load
-            loadFinancialQuestions();
-
             // Handle financial questions
             $('#queryForm').on('submit', function(e) {
                 e.preventDefault();
@@ -158,8 +113,6 @@
                     },
                     success: function(response) {
                         $('#queryResponse').html(response.response.replace(/\n/g, '<br>'));
-                        // Refresh the financial questions list after a new question
-                        loadFinancialQuestions();
                     },
                     error: function() {
                         $('#queryResponse').html('Error processing request');
